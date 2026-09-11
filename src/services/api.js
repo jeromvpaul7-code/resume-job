@@ -1,10 +1,12 @@
 import { MOCK_ANALYSIS_RESULTS, PRESET_JOBS, PRESET_RESUMES } from '../data/mockData';
 
 // API Configuration
-let API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+let API_BASE_URL = import.meta.env.VITE_API_URL !== undefined 
+  ? import.meta.env.VITE_API_URL 
+  : (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
 
-export const getApiBaseUrl = () => API_BASE_URL || 'Mock Engine (Offline/Local)';
+export const getApiBaseUrl = () => API_BASE_URL === '' ? 'Same Origin (/api)' : (API_BASE_URL || 'Mock Engine (Offline/Local)');
 export const setApiBaseUrl = (url) => {
   API_BASE_URL = url;
   if (url) {
@@ -28,7 +30,7 @@ if (savedUrl) {
 export async function analyzeMatch({ resumeFile, resumePresetId, jobDescription, jobPresetId, progressCallback }) {
   if (progressCallback) progressCallback({ step: 1, message: 'Reading resume structure & extracting text...' });
 
-  if (API_BASE_URL) {
+  if (API_BASE_URL !== 'OFFLINE') {
     try {
       const formData = new FormData();
       if (resumeFile) {
@@ -92,7 +94,7 @@ export async function analyzeMatch({ resumeFile, resumePresetId, jobDescription,
  * Fetch analysis details by ID
  */
 export async function getAnalysisById(id) {
-  if (API_BASE_URL) {
+  if (API_BASE_URL !== 'OFFLINE') {
     try {
       const res = await fetch(`${API_BASE_URL}/api/analysis/${id}`);
       if (res.ok) return await res.json();
@@ -108,7 +110,7 @@ export async function getAnalysisById(id) {
  * Health check endpoint tester
  */
 export async function checkBackendStatus() {
-  if (!API_BASE_URL) return { online: false, mode: 'Offline Mock Mode' };
+  if (API_BASE_URL === 'OFFLINE') return { online: false, mode: 'Offline Mock Mode' };
   try {
     const res = await fetch(`${API_BASE_URL}/api/health`, { method: 'GET' });
     if (res.ok) {
